@@ -1,8 +1,8 @@
 publish:
     docker:
         repo: mnbbrown/webproxy
-	username: mnbbrown
-	password: $$DOCKER_HUB_PASSWORD
+    	username: mnbbrown
+    	password: $$DOCKER_HUB_PASSWORD
         tag:
             - $$COMMIT
             - latest
