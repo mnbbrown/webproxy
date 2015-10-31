@@ -1,3 +1,6 @@
+build:
+    image: mnbbrown/ci:latest
+
 publish:
     docker:
         repo: mnbbrown/webproxy
