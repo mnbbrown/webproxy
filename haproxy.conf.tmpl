@@ -17,7 +17,7 @@ frontend ssl
     {{ range services }}{{ if and (in .Tags "ssl") (in .Tags "web") }}
     # SERVICE: {{.Name}} (SSL)
     acl host_{{ .Name }} hdr(host) -i {{ .Name }}.{{ or (env "CLUSTER_DOMAIN") "haproxy.service.consul" }}
-    use {{ .Name }} if host_{{ .Name }}
+    use_backend {{ .Name }} if host_{{ .Name }}
     {{ end }}{{ end }}
 
 
@@ -25,12 +25,12 @@ frontend www
     bind *:80
     reqadd X-Forwarded-Proto:\ http
     acl host_consul hdr(host) -i consul.matthewbrown.io
-    use consul if host_consul
+    use_backend consul if host_consul
     {{ range services }}{{$domain := print .Name "." (or (env "CLUSTER_DOMAIN") "haproxy.service.consul")}}{{ if in .Tags "web" }}
     # SERVICE: {{.Name}}
     acl host_{{ .Name }} hdr(host) -i {{ or (key (print "service/" .Name "/domain")) $domain }}{{ if in .Tags "ssl" }}
     redirect scheme https code 301 if host_{{ .Name }} !{ ssl_fc }{{ end }}
-    {{ if not (in .Tags "ssl") }}use {{ .Name }} if host_{{ .Name }}
+    {{ if not (in .Tags "ssl") }}use_backend {{ .Name }} if host_{{ .Name }}
     {{ end }}{{end}}{{end}}
 
 {{ range services }}{{ if in .Tags "web" }}
