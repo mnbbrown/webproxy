@@ -14,9 +14,9 @@ defaults
 frontend ssl
     bind *:443 ssl crt /etc/ssl/private/
     reqadd X-Forwarded-Proto:\ https
-    {{ range services }}{{ if and (in .Tags "ssl") (in .Tags "web") }}
+    {{ range services }}{{{$domain := print .Name "." (or (env "CLUSTER_DOMAIN") "haproxy.service.consul")}}{{ if and (in .Tags "ssl") (in .Tags "web") }}
     # SERVICE: {{.Name}} (SSL)
-    acl host_{{ .Name }} hdr(host) -i {{ .Name }}.{{ or (env "CLUSTER_DOMAIN") "haproxy.service.consul" }}
+    acl host_{{ .Name }} hdr(host) -i {{ or (key (print "service/" .Name "/domain")) $domain }}
     use_backend {{ .Name }} if host_{{ .Name }}
     {{ end }}{{ end }}
 
