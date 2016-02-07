@@ -41,7 +41,8 @@ backend {{ .Name }}
 backend consul
     server consul consul.service.consul:8500
 
-listen stats :9000
+listen stats
+    bind :9000
     mode http
     stats enable #Enable statistics
     stats uri /haproxy_stats #The URI of the stats page, in this case localhost:9000/haproxy_stats
