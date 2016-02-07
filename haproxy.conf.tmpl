@@ -1,6 +1,5 @@
 global
     maxconn {{or (key "service/haproxy/maxconn") 256}}
-    debug
     tune.ssl.default-dh-param 2048
 
 defaults
@@ -14,7 +13,7 @@ defaults
 frontend ssl
     bind *:443 ssl crt /etc/ssl/private/
     reqadd X-Forwarded-Proto:\ https
-    {{ range services }}{{{$domain := print .Name "." (or (env "CLUSTER_DOMAIN") "haproxy.service.consul")}}{{ if and (in .Tags "ssl") (in .Tags "web") }}
+    {{ range services }}{{$domain := print .Name "." (or (env "CLUSTER_DOMAIN") "haproxy.service.consul")}}{{ if and (in .Tags "ssl") (in .Tags "web") }}
     # SERVICE: {{.Name}} (SSL)
     acl host_{{ .Name }} hdr(host) -i {{ or (key (print "service/" .Name "/domain")) $domain }}
     use_backend {{ .Name }} if host_{{ .Name }}
@@ -41,3 +40,8 @@ backend {{ .Name }}
 
 backend consul
     server consul consul.service.consul:8500
+
+listen stats :9000
+    mode http
+    stats enable #Enable statistics
+    stats uri /haproxy_stats #The URI of the stats page, in this case localhost:9000/haproxy_stats

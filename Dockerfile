@@ -16,6 +16,7 @@ ADD consul-template.cfg /etc/consul-template/consul-template.cfg
 
 EXPOSE 80
 EXPOSE 443
+EXPOSE 9000
 
 ADD start.sh /bin/start.sh
 ENTRYPOINT ["/bin/start.sh"]
