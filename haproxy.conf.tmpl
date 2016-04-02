@@ -1,19 +1,19 @@
 global
-    maxconn {{or (key "service/haproxy/maxconn") 256}}
+    maxconn {{or (key "service/webproxy/maxconn") 256}}
     tune.ssl.default-dh-param 2048
 
 defaults
     mode http
-    timeout connect {{or (key "service/haproxy/timeouts/connect") "5000ms"}}
-    timeout client {{or (key "service/haproxy/timeouts/client") "50000ms"}}
-    timeout server {{or (key "service/haproxy/timeouts/server") "50000ms"}}
+    timeout connect {{or (key "service/webproxy/timeouts/connect") "5000ms"}}
+    timeout client {{or (key "service/webproxy/timeouts/client") "50000ms"}}
+    timeout server {{or (key "service/webproxy/timeouts/server") "50000ms"}}
     option forwardfor
     option http-server-close
 
 frontend ssl
     bind *:443 ssl crt /etc/ssl/private/
     reqadd X-Forwarded-Proto:\ https
-    {{ range services }}{{$domain := print .Name "." (or (env "CLUSTER_DOMAIN") "haproxy.service.consul")}}{{ if and (in .Tags "ssl") (in .Tags "web") }}
+    {{ range services }}{{$domain := print .Name "." (or (env "CLUSTER_DOMAIN") "webproxy.service.consul")}}{{ if and (in .Tags "ssl") (in .Tags "web") }}
     # SERVICE: {{.Name}} (SSL)
     acl host_{{ .Name }} hdr(host) -i {{ or (key (print "service/" .Name "/domain")) $domain }}
     use_backend {{ .Name }} if host_{{ .Name }}
@@ -25,9 +25,9 @@ frontend www
     reqadd X-Forwarded-Proto:\ http
     {{ if service "letsencrypt" }}acl letsencrypt-request path_beg -i /.well-known/acme-challenge/
     use_backend letsencrypt if letsencrypt-request{{end}}
-    acl host_consul hdr(host) -i consul.matthewbrown.io
+    acl host_consul hdr(host) -i consul.{{(or (env "CLUSTER_DOMAIN") "webproxy.service.consul")}}
     use_backend consul if host_consul
-    {{ range services }}{{$domain := print .Name "." (or (env "CLUSTER_DOMAIN") "haproxy.service.consul")}}{{ if in .Tags "web" }}
+    {{ range services }}{{$domain := print .Name "." (or (env "CLUSTER_DOMAIN") "webproxy.service.consul")}}{{ if in .Tags "web" }}
     # SERVICE: {{.Name}}
     acl host_{{ .Name }} hdr(host) -i {{ or (key (print "service/" .Name "/domain")) $domain }}{{ if in .Tags "ssl" }}
     redirect scheme https code 301 if host_{{ .Name }} !{ ssl_fc }{{ end }}
@@ -51,4 +51,4 @@ listen stats
     bind :9000
     mode http
     stats enable #Enable statistics
-    stats uri /haproxy_stats #The URI of the stats page, in this case localhost:9000/haproxy_stats
+    stats uri /webproxy_stats #The URI of the stats page, in this case localhost:9000/webproxy_stats
