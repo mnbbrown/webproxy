@@ -23,8 +23,8 @@ frontend ssl
 frontend www
     bind *:80
     reqadd X-Forwarded-Proto:\ http
-    acl letsencrypt-request path_beg -i /.well-known/acme-challenge/
-    use_backend letsencrypt if letsencrypt-request
+    {{ if service "letsencrypt" }}acl letsencrypt-request path_beg -i /.well-known/acme-challenge/
+    use_backend letsencrypt if letsencrypt-request{{end}}
     acl host_consul hdr(host) -i consul.matthewbrown.io
     use_backend consul if host_consul
     {{ range services }}{{$domain := print .Name "." (or (env "CLUSTER_DOMAIN") "haproxy.service.consul")}}{{ if in .Tags "web" }}
@@ -42,9 +42,10 @@ backend {{ .Name }}
 
 backend consul
     server consul consul.service.consul:8500
-
+{{if service "letsencrypt"}}
 backend letsencrypt
-    server letsencrypt letsencrypt.service.consul:9000
+    server letsencrypt letsencrypt.service.consul:80
+{{end}}
 
 listen stats
     bind :9000
